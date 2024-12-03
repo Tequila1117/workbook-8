@@ -1,29 +1,48 @@
 package com.pluralsight2;
 import java.sql.*;
+import java.util.Scanner;
+
 public class SqlApp {
 
     public static void main(String[] args) {
 
-        String url = "jdbc:mysql://localhost/dealership";
+        String url = "jdbc:mysql://localhost:3306/dealership";
         String user = "root";
         String password = "yearup";
+        boolean running = true;
 
-        try {
-            Connection connection = DriverManager.getConnection(url, user, password);
+        Scanner scanner = new Scanner(System.in);
 
-            Statement statement = connection.createStatement();
+        while (running) {
+            System.out.print("Enter a SQL query: ");
+            String command = scanner.nextLine();
 
-            ResultSet resultSet = statement.executeQuery("SELECT dealership_id, name, address, phone FROM dealerships");
+            if (command.equalsIgnoreCase("exit")) {
+                running = false; // Exit loop if user enters "exit"
+            } else {
+                try {
+                    Connection connection = DriverManager.getConnection(url, user, password);
+                    Statement statement = connection.createStatement();
 
-            while (resultSet.next()) {
-                System.out.println("Dealership ID: " + resultSet.getInt("dealership_id"));
-                System.out.println("Name: " + resultSet.getString("name"));
-                System.out.println("Address: " + resultSet.getString("address"));
-                System.out.println("Phone #: " + resultSet.getString("phone"));
+                    if (command.trim().toUpperCase().startsWith("SELECT")) {
+                        // If it's a SELECT query
+                        ResultSet resultSet = statement.executeQuery(command);
+                        while (resultSet.next()) {
+                            String make = resultSet.getString("MAKE");
+                            System.out.println(make);
+                        }
+                    } else {
+                        // If it's not a SELECT query ( ex. INSERT, UPDATE, DELETE)
+                        int rowsAffected = statement.executeUpdate(command);
+                        System.out.println("Rows affected: " + rowsAffected);
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace(); // Print detailed error if needed
+                    System.out.println("Error executing query. Please check your SQL syntax.");
+                }
             }
         }
-        catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+
+        scanner.close(); // Close scanner after use
     }
 }
